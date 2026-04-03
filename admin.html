@@ -1,0 +1,2014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>管理后台 | 窖龄·陈酿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --gold-primary: #C9A962;
+      --gold-light: #E8D5A3;
+      --gold-dark: #8B7355;
+      --ink-black: #1A1A1A;
+      --ink-deep: #0D0D0D;
+      --cream: #F8F5F0;
+      --cream-dark: #EDE8E0;
+      --burgundy: #722F37;
+      --success: #2E7D32;
+      --error: #C62828;
+      --warning: #F57C00;
+      --info: #1976D2;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Noto Serif SC', serif;
+      background: var(--cream-dark);
+      color: var(--ink-black);
+      line-height: 1.6;
+    }
+
+    /* ===== Login Page ===== */
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--ink-deep) 0%, var(--ink-black) 100%);
+    }
+
+    .login-box {
+      background: var(--cream);
+      padding: 3rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .login-logo {
+      font-size: 2rem;
+      color: var(--gold-primary);
+      letter-spacing: 0.2em;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-subtitle {
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    .login-form .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .login-form label {
+      display: block;
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--cream-dark);
+      background: white;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    .login-form input:focus {
+      outline: none;
+      border-color: var(--gold-primary);
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
+      color: var(--ink-deep);
+      border: none;
+      font-family: inherit;
+      font-size: 1rem;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 1rem;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(201, 169, 98, 0.3);
+    }
+
+    .login-error {
+      color: var(--error);
+      font-size: 0.85rem;
+      text-align: center;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .login-error.show { display: block; }
+
+    /* ===== Admin Layout ===== */
+    .admin-layout {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .admin-layout.active { display: flex; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: var(--ink-deep);
+      padding: 2rem 0;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 0 1.5rem 2rem;
+      border-bottom: 1px solid rgba(201, 169, 98, 0.1);
+    }
+
+    .sidebar-logo {
+      font-size: 1.5rem;
+      color: var(--gold-primary);
+      letter-spacing: 0.15em;
+      margin-bottom: 0.3rem;
+    }
+
+    .sidebar-tag {
+      color: rgba(248, 245, 240, 0.4);
+      font-size: 0.8rem;
+    }
+
+    .sidebar-nav {
+      padding: 1.5rem 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.5rem;
+      color: rgba(248, 245, 240, 0.7);
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover {
+      background: rgba(201, 169, 98, 0.1);
+      color: var(--gold-primary);
+    }
+
+    .nav-item.active {
+      background: rgba(201, 169, 98, 0.15);
+      color: var(--gold-primary);
+      border-right: 3px solid var(--gold-primary);
+    }
+
+    .nav-icon { font-size: 1.2rem; width: 24px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 1.5rem;
+      border-top: 1px solid rgba(201, 169, 98, 0.1);
+      margin-top: auto;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--cream);
+    }
+
+    .user-avatar {
+      width: 40px; height: 40px;
+      background: var(--gold-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-deep);
+      font-weight: 600;
+    }
+
+    .user-name { font-size: 0.9rem; }
+    .user-role { font-size: 0.75rem; color: rgba(248, 245, 240, 0.5); }
+
+    .logout-btn {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 1rem;
+      background: transparent;
+      border: 1px solid rgba(201, 169, 98, 0.3);
+      color: var(--gold-primary);
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(201, 169, 98, 0.1);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      padding: 2rem;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+      color: var(--ink-black);
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.7rem 1.5rem;
+      border: none;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: var(--ink-black);
+      color: var(--cream);
+    }
+
+    .btn-primary:hover {
+      background: var(--gold-primary);
+      color: var(--ink-black);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid var(--ink-black);
+      color: var(--ink-black);
+    }
+
+    .btn-secondary:hover {
+      background: var(--ink-black);
+      color: var(--cream);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1.5rem;
+      border-left: 4px solid var(--gold-primary);
+    }
+
+    .stat-card.success { border-left-color: var(--success); }
+    .stat-card.warning { border-left-color: var(--warning); }
+    .stat-card.info { border-left-color: var(--info); }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--ink-black);
+    }
+
+    .stat-change {
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .stat-change.up { color: var(--success); }
+    .stat-change.down { color: var(--error); }
+
+    /* Data Table */
+    .data-card {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      color: var(--ink-black);
+    }
+
+    .card-filters {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .filter-select, .filter-input {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--cream-dark);
+      background: white;
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .data-table th {
+      background: var(--cream);
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .data-table tbody tr:hover {
+      background: rgba(201, 169, 98, 0.05);
+    }
+
+    .order-id {
+      color: var(--burgundy);
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      font-size: 0.75rem;
+      border-radius: 3px;
+    }
+
+    .status-pending { background: #FFF3E0; color: var(--warning); }
+    .status-paid { background: #E3F2FD; color: var(--info); }
+    .status-shipped { background: #F3E5F5; color: #7B1FA2; }
+    .status-delivered { background: #E8F5E9; color: var(--success); }
+    .status-cancelled { background: #FFEBEE; color: var(--error); }
+
+    .action-btns {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8rem;
+      border: 1px solid var(--cream-dark);
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .action-btn:hover {
+      background: var(--ink-black);
+      color: var(--cream);
+      border-color: var(--ink-black);
+    }
+
+    /* Order Detail Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--cream-dark);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+    }
+
+    .modal-close {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: #666;
+      transition: color 0.3s;
+    }
+
+    .modal-close:hover { color: var(--error); }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .detail-section {
+      margin-bottom: 2rem;
+    }
+
+    .detail-section h4 {
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--cream-dark);
+      color: #666;
+    }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .detail-label {
+      font-size: 0.8rem;
+      color: #999;
+    }
+
+    .detail-value {
+      font-size: 0.95rem;
+      color: var(--ink-black);
+    }
+
+    .detail-items-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .detail-items-table th,
+    .detail-items-table td {
+      padding: 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid var(--cream-dark);
+    }
+
+    .detail-items-table th {
+      font-size: 0.8rem;
+      color: #666;
+      background: var(--cream);
+    }
+
+    .modal-footer {
+      padding: 1.5rem;
+      border-top: 1px solid var(--cream-dark);
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+    }
+
+    /* User Management */
+    .user-card {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-info-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .user-info-row .user-avatar {
+      width: 50px; height: 50px;
+      font-size: 1.2rem;
+    }
+
+    .user-details h4 { font-size: 1rem; margin-bottom: 0.3rem; }
+    .user-details p { font-size: 0.85rem; color: #666; }
+
+    .user-stats {
+      display: flex;
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .user-stat-value {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--burgundy);
+    }
+
+    .user-stat-label {
+      font-size: 0.75rem;
+      color: #999;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px; right: 20px;
+      padding: 1rem 1.5rem;
+      background: var(--ink-deep);
+      color: var(--cream);
+      z-index: 2000;
+      transform: translateX(150%);
+      transition: transform 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .toast.active { transform: translateX(0); }
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--error); }
+
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .page-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--cream-dark);
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .page-btn:hover, .page-btn.active {
+      background: var(--ink-black);
+      color: var(--cream);
+      border-color: var(--ink-black);
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 60px;
+        padding: 1rem 0;
+      }
+      .sidebar-header, .sidebar-footer { padding: 0 0.5rem; }
+      .sidebar-logo, .sidebar-tag, .nav-item span, .user-info, .logout-btn { display: none; }
+      .nav-item { justify-content: center; padding: 1rem; }
+      .main-content { margin-left: 60px; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .detail-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Page -->
+  <div class="login-page" id="loginPage">
+    <div class="login-box">
+      <div class="login-header">
+        <div class="login-logo">窖龄·陈酿</div>
+        <div class="login-subtitle">管理后台登录</div>
+      </div>
+      <form class="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>用户名</label>
+          <input type="text" id="loginUsername" placeholder="请输入用户名" required>
+        </div>
+        <div class="form-group">
+          <label>密码</label>
+          <input type="password" id="loginPassword" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="login-btn">登 录</button>
+        <div class="login-error" id="loginError">用户名或密码错误</div>
+      </form>
+      <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--cream-dark); text-align: center; color: #999; font-size: 0.85rem;">
+        <p>演示账号：admin / admin123</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Layout -->
+  <div class="admin-layout" id="adminLayout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">窖龄·陈酿</div>
+        <div class="sidebar-tag">管理后台</div>
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="showPage('dashboard')">
+          <span class="nav-icon">📊</span>
+          <span>数据概览</span>
+        </a>
+        <a class="nav-item" onclick="showPage('orders')">
+          <span class="nav-icon">📦</span>
+          <span>订单管理</span>
+        </a>
+        <a class="nav-item" onclick="showPage('users')">
+          <span class="nav-icon">👥</span>
+          <span>用户管理</span>
+        </a>
+        <a class="nav-item" onclick="showPage('products')">
+          <span class="nav-icon">🍶</span>
+          <span>商品管理</span>
+        </a>
+        <a class="nav-item" onclick="showPage('inventory')">
+          <span class="nav-icon">📦</span>
+          <span>库存管理</span>
+        </a>
+        <a class="nav-item" onclick="showPage('marketing')">
+          <span class="nav-icon">🎁</span>
+          <span>营销活动</span>
+        </a>
+        <a class="nav-item" onclick="showPage('settings')">
+          <span class="nav-icon">⚙️</span>
+          <span>系统设置</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">管</div>
+          <div>
+            <div class="user-name" id="currentAdmin">管理员</div>
+            <div class="user-role">超级管理员</div>
+          </div>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">退出登录</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard Page -->
+      <div class="page active" id="pageDashboard">
+        <div class="page-header">
+          <h1 class="page-title">数据概览</h1>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="refreshData()">刷新数据</button>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">今日订单</div>
+            <div class="stat-value" id="todayOrders">0</div>
+            <div class="stat-change up">↑ 12%</div>
+          </div>
+          <div class="stat-card success">
+            <div class="stat-label">今日销售额</div>
+            <div class="stat-value" id="todaySales">¥0</div>
+            <div class="stat-change up">↑ 8%</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-label">待处理订单</div>
+            <div class="stat-value" id="pendingOrders">0</div>
+            <div class="stat-change">需及时处理</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-label">总用户数</div>
+            <div class="stat-value" id="totalUsers">0</div>
+            <div class="stat-change up">↑ 5%</div>
+          </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+          <div class="data-card">
+            <div class="card-header">
+              <h3 class="card-title">销售趋势</h3>
+              <div class="card-filters">
+                <select class="filter-select" id="chartPeriod" onchange="updateSalesChart()">
+                  <option value="7">近7天</option>
+                  <option value="30">近30天</option>
+                  <option value="90">近3个月</option>
+                </select>
+              </div>
+            </div>
+            <canvas id="salesChart" height="250"></canvas>
+          </div>
+          <div class="data-card">
+            <div class="card-header">
+              <h3 class="card-title">商品销量占比</h3>
+            </div>
+            <canvas id="productPieChart" height="250"></canvas>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
+          <div class="data-card">
+            <div class="card-header">
+              <h3 class="card-title">订单状态分布</h3>
+            </div>
+            <canvas id="orderStatusChart" height="200"></canvas>
+          </div>
+          <div class="data-card">
+            <div class="card-header">
+              <h3 class="card-title">支付方式统计</h3>
+            </div>
+            <canvas id="paymentChart" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">最近订单</h3>
+            <button class="btn btn-secondary" onclick="showPage('orders')">查看全部</button>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>客户</th>
+                <th>金额</th>
+                <th>状态</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody id="recentOrdersTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Orders Page -->
+      <div class="page" id="pageOrders">
+        <div class="page-header">
+          <h1 class="page-title">订单管理</h1>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="exportOrders()">导出订单</button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">全部订单</h3>
+            <div class="card-filters">
+              <select class="filter-select" id="statusFilter" onchange="filterOrders()">
+                <option value="">全部状态</option>
+                <option value="pending">待付款</option>
+                <option value="paid">已付款</option>
+                <option value="shipped">已发货</option>
+                <option value="delivered">已完成</option>
+                <option value="cancelled">已取消</option>
+              </select>
+              <input type="text" class="filter-input" id="searchInput" placeholder="搜索订单号/客户" onkeyup="filterOrders()">
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>订单号</th>
+                <th>客户信息</th>
+                <th>商品</th>
+                <th>金额</th>
+                <th>状态</th>
+                <th>下单时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTable"></tbody>
+          </table>
+          <div class="pagination" id="ordersPagination"></div>
+        </div>
+      </div>
+
+      <!-- Users Page -->
+      <div class="page" id="pageUsers">
+        <div class="page-header">
+          <h1 class="page-title">用户管理</h1>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="showAddUserModal()">添加用户</button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">注册用户</h3>
+            <div class="card-filters">
+              <input type="text" class="filter-input" id="userSearchInput" placeholder="搜索用户" onkeyup="filterUsers()">
+            </div>
+          </div>
+          <div id="usersList"></div>
+        </div>
+      </div>
+
+      <!-- Products Page -->
+      <div class="page" id="pageProducts">
+        <div class="page-header">
+          <h1 class="page-title">商品管理</h1>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="showAddProductModal()">添加商品</button>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">商品列表</h3>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>商品</th>
+                <th>价格</th>
+                <th>库存</th>
+                <th>销量</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="productsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Inventory Page -->
+      <div class="page" id="pageInventory">
+        <div class="page-header">
+          <h1 class="page-title">库存管理</h1>
+          <div class="page-actions">
+            <button class="btn btn-secondary" onclick="exportInventory()">导出库存</button>
+            <button class="btn btn-primary" onclick="showStockInModal()">入库</button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+          <div class="stat-card">
+            <div class="stat-label">总库存</div>
+            <div class="stat-value" id="totalStock">0</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-label">低库存预警</div>
+            <div class="stat-value" id="lowStock">0</div>
+            <div class="stat-change">库存 &lt; 20</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-label">库存价值</div>
+            <div class="stat-value" id="stockValue">¥0</div>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">库存明细</h3>
+            <div class="card-filters">
+              <select class="filter-select" id="stockFilter" onchange="filterInventory()">
+                <option value="">全部</option>
+                <option value="low">低库存</option>
+                <option value="normal">正常</option>
+                <option value="high">充足</option>
+              </select>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>商品</th>
+                <th>当前库存</th>
+                <th>安全库存</th>
+                <th>库存状态</th>
+                <th>最近入库</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTable"></tbody>
+          </table>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">库存变动记录</h3>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>商品</th>
+                <th>类型</th>
+                <th>数量</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody id="stockLogTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Marketing Page -->
+      <div class="page" id="pageMarketing">
+        <div class="page-header">
+          <h1 class="page-title">营销活动</h1>
+          <div class="page-actions">
+            <button class="btn btn-primary" onclick="showAddCampaignModal()">创建活动</button>
+          </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="stat-card success">
+            <div class="stat-label">进行中活动</div>
+            <div class="stat-value" id="activeCampaigns">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">优惠券发放</div>
+            <div class="stat-value" id="totalCoupons">0</div>
+          </div>
+          <div class="stat-card info">
+            <div class="stat-label">优惠券使用</div>
+            <div class="stat-value" id="usedCoupons">0</div>
+          </div>
+          <div class="stat-card warning">
+            <div class="stat-label">活动收入</div>
+            <div class="stat-value" id="campaignRevenue">¥0</div>
+          </div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">营销活动列表</h3>
+            <div class="card-filters">
+              <select class="filter-select" id="campaignFilter" onchange="filterCampaigns()">
+                <option value="">全部</option>
+                <option value="active">进行中</option>
+                <option value="pending">未开始</option>
+                <option value="ended">已结束</option>
+              </select>
+            </div>
+          </div>
+          <div id="campaignsList"></div>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">优惠券管理</h3>
+            <div class="page-actions">
+              <button class="btn btn-secondary" onclick="showAddCouponModal()">创建优惠券</button>
+            </div>
+          </div>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>优惠券</th>
+                <th>类型</th>
+                <th>发放/使用</th>
+                <th>有效期</th>
+                <th>状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="couponsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div class="page" id="pageSettings">
+        <div class="page-header">
+          <h1 class="page-title">系统设置</h1>
+        </div>
+
+        <div class="data-card">
+          <div class="card-header">
+            <h3 class="card-title">基本信息</h3>
+          </div>
+          <div style="max-width: 500px;">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">网站名称</label>
+              <input type="text" value="窖龄·陈酿" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">客服电话</label>
+              <input type="text" value="400-888-8888" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+              <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">客服邮箱</label>
+              <input type="text" value="service@jiaoling.com" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+            </div>
+            <button class="btn btn-primary" onclick="showToast('设置已保存', 'success')">保存设置</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay" id="orderModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">订单详情</h3>
+        <span class="modal-close" onclick="closeModal('orderModal')">✕</span>
+      </div>
+      <div class="modal-body" id="orderDetailBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('orderModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stock In Modal -->
+  <div class="modal-overlay" id="stockInModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">商品入库</h3>
+        <span class="modal-close" onclick="closeModal('stockInModal')">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">选择商品</label>
+          <select id="stockInProduct" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+            <option value="">请选择商品</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">入库数量</label>
+          <input type="number" id="stockInQty" min="1" value="1" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">备注</label>
+          <input type="text" id="stockInRemark" placeholder="如：采购入库、退货入库等" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('stockInModal')">取消</button>
+        <button class="btn btn-primary" onclick="submitStockIn()">确认入库</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Campaign Modal -->
+  <div class="modal-overlay" id="campaignModal">
+    <div class="modal-content" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3 class="modal-title">创建营销活动</h3>
+        <span class="modal-close" onclick="closeModal('campaignModal')">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">活动名称</label>
+          <input type="text" id="campaignName" placeholder="如：新春特惠、会员专享" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">开始时间</label>
+            <input type="datetime-local" id="campaignStart" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">结束时间</label>
+            <input type="datetime-local" id="campaignEnd" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">活动类型</label>
+          <select id="campaignType" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+            <option value="discount">满减活动</option>
+            <option value="coupon">优惠券活动</option>
+            <option value="gift">赠品活动</option>
+            <option value="flash">限时秒杀</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">门槛金额</label>
+            <input type="number" id="campaignThreshold" placeholder="满多少" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">优惠金额</label>
+            <input type="number" id="campaignDiscount" placeholder="减多少" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">活动描述</label>
+          <textarea id="campaignDesc" placeholder="活动详情描述" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit; min-height: 80px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('campaignModal')">取消</button>
+        <button class="btn btn-primary" onclick="submitCampaign()">创建活动</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Coupon Modal -->
+  <div class="modal-overlay" id="couponModal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h3 class="modal-title">创建优惠券</h3>
+        <span class="modal-close" onclick="closeModal('couponModal')">✕</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">优惠券名称</label>
+          <input type="text" id="couponName" placeholder="如：新用户专享券" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+        </div>
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">优惠类型</label>
+          <select id="couponType" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+            <option value="fixed">满减券</option>
+            <option value="percent">折扣券</option>
+          </select>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">优惠额度</label>
+            <input type="number" id="couponValue" placeholder="金额或折扣" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">使用门槛</label>
+            <input type="number" id="couponMinSpend" placeholder="最低消费" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">发放数量</label>
+            <input type="number" id="couponTotal" value="100" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+          <div class="form-group">
+            <label style="display: block; font-size: 0.85rem; color: #666; margin-bottom: 0.5rem;">有效期(天)</label>
+            <input type="number" id="couponDays" value="30" style="width: 100%; padding: 0.8rem; border: 1px solid var(--cream-dark); font-family: inherit;">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('couponModal')">取消</button>
+        <button class="btn btn-primary" onclick="submitCoupon()">创建优惠券</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span id="toastIcon">✓</span>
+    <span id="toastMessage">操作成功</span>
+  </div>
+
+  <script>
+    // ===== 数据初始化 =====
+    const ADMIN_ACCOUNT = { username: 'admin', password: 'admin123', name: '管理员' };
+
+    // 示例用户数据
+    let users = JSON.parse(localStorage.getItem('users')) || [
+      { id: 1, name: '王先生', phone: '13800138001', email: 'wang@example.com', orders: 5, totalSpent: 12800, createdAt: '2024-01-15' },
+      { id: 2, name: '李女士', phone: '13800138002', email: 'li@example.com', orders: 3, totalSpent: 7740, createdAt: '2024-02-20' },
+      { id: 3, name: '张先生', phone: '13800138003', email: 'zhang@example.com', orders: 8, totalSpent: 25600, createdAt: '2024-03-10' }
+    ];
+
+    // 示例商品数据
+    let products = JSON.parse(localStorage.getItem('products')) || [
+      { id: 1, name: '窖龄五年·典藏', price: 1280, originalPrice: 1680, stock: 100, sales: 58, status: 'active', safeStock: 20 },
+      { id: 2, name: '窖龄八年·尊享', price: 2580, originalPrice: 3280, stock: 50, sales: 32, status: 'active', safeStock: 15 },
+      { id: 3, name: '窖龄十年·传世', price: 4980, originalPrice: 6280, stock: 30, sales: 15, status: 'active', safeStock: 10 }
+    ];
+
+    // 库存变动记录
+    let stockLogs = JSON.parse(localStorage.getItem('stockLogs')) || [
+      { id: 1, productId: 1, productName: '窖龄五年·典藏', type: 'in', qty: 50, remark: '采购入库', createdAt: '2024-04-01 10:00:00' },
+      { id: 2, productId: 2, productName: '窖龄八年·尊享', type: 'out', qty: 5, remark: '订单出库', createdAt: '2024-04-02 14:30:00' },
+      { id: 3, productId: 3, productName: '窖龄十年·传世', type: 'in', qty: 20, remark: '采购入库', createdAt: '2024-04-03 09:15:00' }
+    ];
+
+    // 营销活动数据
+    let campaigns = JSON.parse(localStorage.getItem('campaigns')) || [
+      { id: 1, name: '新春特惠', type: 'discount', threshold: 2000, discount: 200, startAt: '2024-01-15T00:00', endAt: '2024-02-15T23:59', desc: '满2000减200', status: 'ended', revenue: 58000 },
+      { id: 2, name: '会员专享', type: 'coupon', threshold: 1000, discount: 100, startAt: '2024-03-01T00:00', endAt: '2024-12-31T23:59', desc: '会员专享满减', status: 'active', revenue: 32000 },
+      { id: 3, name: '限时秒杀', type: 'flash', threshold: 0, discount: 300, startAt: '2024-04-10T10:00', endAt: '2024-04-10T12:00', desc: '窖龄五年限时秒杀', status: 'pending', revenue: 0 }
+    ];
+
+    // 优惠券数据
+    let coupons = JSON.parse(localStorage.getItem('coupons')) || [
+      { id: 1, name: '新用户专享券', type: 'fixed', value: 100, minSpend: 500, total: 500, used: 128, days: 30, status: 'active' },
+      { id: 2, name: '会员生日券', type: 'percent', value: 10, minSpend: 1000, total: 200, used: 45, days: 7, status: 'active' },
+      { id: 3, name: '满减优惠券', type: 'fixed', value: 200, minSpend: 2000, total: 300, used: 89, days: 15, status: 'active' }
+    ];
+
+    // Chart instances
+    let salesChart, productPieChart, orderStatusChart, paymentChart;
+
+    // 生成示例订单
+    function generateSampleOrders() {
+      if (orders.length === 0) {
+        const sampleOrders = [
+          { id: 'JL202404010001', customer: { name: '王先生', phone: '13800138001', address: '北京市朝阳区建国路88号' }, items: [{ name: '窖龄五年·典藏', price: 1280, quantity: 2 }], total: 2560, status: 'delivered', payment: 'wechat', createdAt: '2024-04-01 10:30:00' },
+          { id: 'JL202404020001', customer: { name: '李女士', phone: '13800138002', address: '上海市浦东新区陆家嘴环路1000号' }, items: [{ name: '窖龄八年·尊享', price: 2580, quantity: 1 }], total: 2580, status: 'shipped', payment: 'alipay', createdAt: '2024-04-02 14:20:00' },
+          { id: 'JL202404030001', customer: { name: '张先生', phone: '13800138003', address: '成都市武侯区天府大道666号' }, items: [{ name: '窖龄十年·传世', price: 4980, quantity: 1 }, { name: '窖龄五年·典藏', price: 1280, quantity: 2 }], total: 7540, status: 'paid', payment: 'bank', createdAt: '2024-04-03 09:15:00' },
+          { id: 'JL202404040001', customer: { name: '赵先生', phone: '13800138004', address: '广州市天河区珠江新城' }, items: [{ name: '窖龄八年·尊享', price: 2580, quantity: 2 }], total: 5160, status: 'pending', payment: 'wechat', createdAt: '2024-04-04 02:49:00' }
+        ];
+        orders = sampleOrders;
+        localStorage.setItem('orders', JSON.stringify(orders));
+      }
+    }
+
+    generateSampleOrders();
+
+    // ===== 登录功能 =====
+    function handleLogin(e) {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+
+      if (username === ADMIN_ACCOUNT.username && password === ADMIN_ACCOUNT.password) {
+        localStorage.setItem('adminLoggedIn', 'true');
+        localStorage.setItem('adminName', ADMIN_ACCOUNT.name);
+        showAdminLayout();
+      } else {
+        document.getElementById('loginError').classList.add('show');
+        setTimeout(() => document.getElementById('loginError').classList.remove('show'), 3000);
+      }
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('adminLoggedIn');
+      localStorage.removeItem('adminName');
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('adminLayout').classList.remove('active');
+    }
+
+    function showAdminLayout() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminLayout').classList.add('active');
+      document.getElementById('currentAdmin').textContent = localStorage.getItem('adminName') || '管理员';
+      refreshData();
+    }
+
+    // ===== 页面切换 =====
+    function showPage(page) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      
+      const pageNames = ['dashboard', 'orders', 'users', 'products', 'inventory', 'marketing', 'settings'];
+      document.getElementById('page' + page.charAt(0).toUpperCase() + page.slice(1)).classList.add('active');
+      document.querySelectorAll('.nav-item')[pageNames.indexOf(page)].classList.add('active');
+
+      if (page === 'orders') renderOrdersTable();
+      if (page === 'users') renderUsersList();
+      if (page === 'products') renderProductsTable();
+      if (page === 'inventory') renderInventoryPage();
+      if (page === 'marketing') renderMarketingPage();
+    }
+
+    // ===== 数据刷新 =====
+    function refreshData() {
+      // 统计数据
+      const today = new Date().toISOString().split('T')[0];
+      const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
+      
+      document.getElementById('todayOrders').textContent = todayOrders.length;
+      document.getElementById('todaySales').textContent = '¥' + todayOrders.reduce((sum, o) => sum + o.total, 0).toLocaleString();
+      document.getElementById('pendingOrders').textContent = orders.filter(o => o.status === 'pending' || o.status === 'paid').length;
+      document.getElementById('totalUsers').textContent = users.length;
+
+      // 最近订单
+      const recentOrders = orders.slice(-5).reverse();
+      document.getElementById('recentOrdersTable').innerHTML = recentOrders.map(order => `
+        <tr>
+          <td><span class="order-id">${order.id}</span></td>
+          <td>${order.customer.name}</td>
+          <td>¥${order.total.toLocaleString()}</td>
+          <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+          <td>${order.createdAt}</td>
+        </tr>
+      `).join('');
+
+      // 渲染图表
+      renderCharts();
+    }
+
+    // ===== 图表渲染 =====
+    function renderCharts() {
+      // 销售趋势图
+      const salesCtx = document.getElementById('salesChart').getContext('2d');
+      if (salesChart) salesChart.destroy();
+      
+      const days = parseInt(document.getElementById('chartPeriod').value);
+      const labels = [];
+      const salesData = [];
+      const ordersData = [];
+      
+      for (let i = days - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        labels.push(date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }));
+        salesData.push(Math.floor(Math.random() * 20000) + 5000);
+        ordersData.push(Math.floor(Math.random() * 15) + 3);
+      }
+
+      salesChart = new Chart(salesCtx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: '销售额',
+            data: salesData,
+            borderColor: '#C9A962',
+            backgroundColor: 'rgba(201, 169, 98, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          }, {
+            label: '订单数',
+            data: ordersData,
+            borderColor: '#722F37',
+            backgroundColor: 'transparent',
+            tension: 0.4,
+            yAxisID: 'y1'
+          }]
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          scales: {
+            y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '销售额(¥)' } },
+            y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: '订单数' }, grid: { drawOnChartArea: false } }
+          }
+        }
+      });
+
+      // 商品销量饼图
+      const pieCtx = document.getElementById('productPieChart').getContext('2d');
+      if (productPieChart) productPieChart.destroy();
+      
+      productPieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+          labels: products.map(p => p.name),
+          datasets: [{
+            data: products.map(p => p.sales),
+            backgroundColor: ['#C9A962', '#722F37', '#8B7355'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+
+      // 订单状态分布
+      const statusCtx = document.getElementById('orderStatusChart').getContext('2d');
+      if (orderStatusChart) orderStatusChart.destroy();
+      
+      const statusCounts = {
+        pending: orders.filter(o => o.status === 'pending').length,
+        paid: orders.filter(o => o.status === 'paid').length,
+        shipped: orders.filter(o => o.status === 'shipped').length,
+        delivered: orders.filter(o => o.status === 'delivered').length,
+        cancelled: orders.filter(o => o.status === 'cancelled').length
+      };
+
+      orderStatusChart = new Chart(statusCtx, {
+        type: 'bar',
+        data: {
+          labels: ['待付款', '已付款', '已发货', '已完成', '已取消'],
+          datasets: [{
+            data: Object.values(statusCounts),
+            backgroundColor: ['#F57C00', '#1976D2', '#7B1FA2', '#2E7D32', '#C62828']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } }
+        }
+      });
+
+      // 支付方式统计
+      const paymentCtx = document.getElementById('paymentChart').getContext('2d');
+      if (paymentChart) paymentChart.destroy();
+      
+      const paymentCounts = {
+        wechat: orders.filter(o => o.payment === 'wechat').length,
+        alipay: orders.filter(o => o.payment === 'alipay').length,
+        bank: orders.filter(o => o.payment === 'bank').length
+      };
+
+      paymentChart = new Chart(paymentCtx, {
+        type: 'pie',
+        data: {
+          labels: ['微信支付', '支付宝', '银行转账'],
+          datasets: [{
+            data: Object.values(paymentCounts),
+            backgroundColor: ['#07C160', '#1677FF', '#C9A962']
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } }
+        }
+      });
+    }
+
+    function updateSalesChart() {
+      renderCharts();
+    }
+
+    // ===== 订单管理 =====
+    function getStatusText(status) {
+      const statusMap = {
+        pending: '待付款',
+        paid: '已付款',
+        shipped: '已发货',
+        delivered: '已完成',
+        cancelled: '已取消'
+      };
+      return statusMap[status] || status;
+    }
+
+    function renderOrdersTable() {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const searchInput = document.getElementById('searchInput').value.toLowerCase();
+      
+      let filteredOrders = orders;
+      if (statusFilter) {
+        filteredOrders = filteredOrders.filter(o => o.status === statusFilter);
+      }
+      if (searchInput) {
+        filteredOrders = filteredOrders.filter(o => 
+          o.id.toLowerCase().includes(searchInput) || 
+          o.customer.name.toLowerCase().includes(searchInput) ||
+          o.customer.phone.includes(searchInput)
+        );
+      }
+
+      document.getElementById('ordersTable').innerHTML = filteredOrders.map(order => `
+        <tr>
+          <td><span class="order-id">${order.id}</span></td>
+          <td>
+            <div>${order.customer.name}</div>
+            <div style="font-size: 0.8rem; color: #999;">${order.customer.phone}</div>
+          </td>
+          <td>${order.items.map(i => i.name + ' x' + i.quantity).join(', ')}</td>
+          <td>¥${order.total.toLocaleString()}</td>
+          <td><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></td>
+          <td>${order.createdAt}</td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn" onclick="viewOrder('${order.id}')">查看</button>
+              <button class="action-btn" onclick="updateOrderStatus('${order.id}')">更新</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterOrders() {
+      renderOrdersTable();
+    }
+
+    function viewOrder(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      document.getElementById('orderDetailBody').innerHTML = `
+        <div class="detail-section">
+          <h4>订单信息</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">订单号</span>
+              <span class="detail-value">${order.id}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">状态</span>
+              <span class="detail-value"><span class="status-badge status-${order.status}">${getStatusText(order.status)}</span></span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">下单时间</span>
+              <span class="detail-value">${order.createdAt}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">支付方式</span>
+              <span class="detail-value">${order.payment === 'wechat' ? '微信支付' : order.payment === 'alipay' ? '支付宝' : '银行转账'}</span>
+            </div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>收货信息</h4>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <span class="detail-label">收货人</span>
+              <span class="detail-value">${order.customer.name}</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">手机号</span>
+              <span class="detail-value">${order.customer.phone}</span>
+            </div>
+            <div class="detail-item full" style="grid-column: 1 / -1;">
+              <span class="detail-label">收货地址</span>
+              <span class="detail-value">${order.customer.address}</span>
+            </div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>商品信息</h4>
+          <table class="detail-items-table">
+            <thead>
+              <tr>
+                <th>商品</th>
+                <th>单价</th>
+                <th>数量</th>
+                <th>小计</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td>¥${item.price.toLocaleString()}</td>
+                  <td>${item.quantity}</td>
+                  <td>¥${(item.price * item.quantity).toLocaleString()}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          <div style="text-align: right; margin-top: 1rem; font-size: 1.1rem;">
+            <strong>订单总额：<span style="color: var(--burgundy);">¥${order.total.toLocaleString()}</span></strong>
+          </div>
+        </div>
+      `;
+
+      document.getElementById('orderModal').classList.add('active');
+    }
+
+    function updateOrderStatus(orderId) {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      const statusFlow = ['pending', 'paid', 'shipped', 'delivered'];
+      const currentIndex = statusFlow.indexOf(order.status);
+      
+      if (currentIndex < statusFlow.length - 1) {
+        order.status = statusFlow[currentIndex + 1];
+        localStorage.setItem('orders', JSON.stringify(orders));
+        renderOrdersTable();
+        refreshData();
+        showToast(`订单已更新为${getStatusText(order.status)}`, 'success');
+      } else {
+        showToast('订单已完成', 'error');
+      }
+    }
+
+    function exportOrders() {
+      const csvContent = 'data:text/csv;charset=utf-8,' + 
+        '订单号,客户,手机号,金额,状态,时间\n' +
+        orders.map(o => `${o.id},${o.customer.name},${o.customer.phone},${o.total},${getStatusText(o.status)},${o.createdAt}`).join('\n');
+      
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csvContent));
+      link.setAttribute('download', 'orders.csv');
+      link.click();
+      showToast('订单已导出', 'success');
+    }
+
+    // ===== 用户管理 =====
+    function renderUsersList() {
+      const searchInput = document.getElementById('userSearchInput').value.toLowerCase();
+      let filteredUsers = users;
+      if (searchInput) {
+        filteredUsers = users.filter(u => 
+          u.name.toLowerCase().includes(searchInput) || 
+          u.phone.includes(searchInput) ||
+          u.email.toLowerCase().includes(searchInput)
+        );
+      }
+
+      document.getElementById('usersList').innerHTML = filteredUsers.map(user => `
+        <div class="user-card">
+          <div class="user-info-row">
+            <div class="user-avatar">${user.name.charAt(0)}</div>
+            <div class="user-details">
+              <h4>${user.name}</h4>
+              <p>${user.phone} | ${user.email}</p>
+              <p style="font-size: 0.75rem; color: #999;">注册时间：${user.createdAt}</p>
+            </div>
+          </div>
+          <div class="user-stats">
+            <div>
+              <div class="user-stat-value">${user.orders}</div>
+              <div class="user-stat-label">订单数</div>
+            </div>
+            <div>
+              <div class="user-stat-value">¥${user.totalSpent.toLocaleString()}</div>
+              <div class="user-stat-label">总消费</div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterUsers() {
+      renderUsersList();
+    }
+
+    // ===== 商品管理 =====
+    function renderProductsTable() {
+      document.getElementById('productsTable').innerHTML = products.map(product => `
+        <tr>
+          <td>
+            <div style="font-weight: 500;">${product.name}</div>
+            <div style="font-size: 0.8rem; color: #999;">原价：¥${product.originalPrice.toLocaleString()}</div>
+          </td>
+          <td style="color: var(--burgundy); font-weight: 500;">¥${product.price.toLocaleString()}</td>
+          <td>${product.stock}</td>
+          <td>${product.sales}</td>
+          <td><span class="status-badge status-delivered">${product.status === 'active' ? '上架中' : '已下架'}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn" onclick="editProduct(${product.id})">编辑</button>
+              <button class="action-btn" onclick="toggleProduct(${product.id})">${product.status === 'active' ? '下架' : '上架'}</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function toggleProduct(id) {
+      const product = products.find(p => p.id === id);
+      if (product) {
+        product.status = product.status === 'active' ? 'inactive' : 'active';
+        localStorage.setItem('products', JSON.stringify(products));
+        renderProductsTable();
+        showToast(`商品已${product.status === 'active' ? '上架' : '下架'}`, 'success');
+      }
+    }
+
+    function editProduct(id) {
+      showToast('编辑功能开发中', 'success');
+    }
+
+    // ===== 库存管理 =====
+    function renderInventoryPage() {
+      // 统计数据
+      const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+      const lowStockCount = products.filter(p => p.stock < (p.safeStock || 20)).length;
+      const stockValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
+
+      document.getElementById('totalStock').textContent = totalStock;
+      document.getElementById('lowStock').textContent = lowStockCount;
+      document.getElementById('stockValue').textContent = '¥' + stockValue.toLocaleString();
+
+      // 库存明细
+      renderInventoryTable();
+
+      // 库存变动记录
+      document.getElementById('stockLogTable').innerHTML = stockLogs.slice(-10).reverse().map(log => `
+        <tr>
+          <td>${log.createdAt}</td>
+          <td>${log.productName}</td>
+          <td><span class="status-badge status-${log.type === 'in' ? 'delivered' : 'pending'}">${log.type === 'in' ? '入库' : '出库'}</span></td>
+          <td style="color: ${log.type === 'in' ? 'var(--success)' : 'var(--error)'}">${log.type === 'in' ? '+' : '-'}${log.qty}</td>
+          <td>${log.remark}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderInventoryTable() {
+      const filter = document.getElementById('stockFilter')?.value || '';
+      let filteredProducts = products;
+
+      if (filter === 'low') {
+        filteredProducts = products.filter(p => p.stock < (p.safeStock || 20));
+      } else if (filter === 'normal') {
+        filteredProducts = products.filter(p => p.stock >= (p.safeStock || 20) && p.stock < 50);
+      } else if (filter === 'high') {
+        filteredProducts = products.filter(p => p.stock >= 50);
+      }
+
+      document.getElementById('inventoryTable').innerHTML = filteredProducts.map(product => {
+        const safeStock = product.safeStock || 20;
+        let statusClass = 'status-delivered';
+        let statusText = '充足';
+        if (product.stock < safeStock) {
+          statusClass = 'status-cancelled';
+          statusText = '不足';
+        } else if (product.stock < safeStock * 2) {
+          statusClass = 'status-pending';
+          statusText = '正常';
+        }
+
+        return `
+          <tr>
+            <td style="font-weight: 500;">${product.name}</td>
+            <td style="font-size: 1.2rem; font-weight: 600; color: ${product.stock < safeStock ? 'var(--error)' : 'var(--ink-black)'};">${product.stock}</td>
+            <td>${safeStock}</td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>-</td>
+            <td>
+              <div class="action-btns">
+                <button class="action-btn" onclick="quickStockIn(${product.id})">入库</button>
+                <button class="action-btn" onclick="adjustStock(${product.id})">调整</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterInventory() {
+      renderInventoryTable();
+    }
+
+    function showStockInModal() {
+      const select = document.getElementById('stockInProduct');
+      select.innerHTML = '<option value="">请选择商品</option>' + 
+        products.map(p => `<option value="${p.id}">${p.name} (当前库存: ${p.stock})</option>`).join('');
+      document.getElementById('stockInModal').classList.add('active');
+    }
+
+    function submitStockIn() {
+      const productId = parseInt(document.getElementById('stockInProduct').value);
+      const qty = parseInt(document.getElementById('stockInQty').value);
+      const remark = document.getElementById('stockInRemark').value || '入库';
+
+      if (!productId || !qty) {
+        showToast('请填写完整信息', 'error');
+        return;
+      }
+
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        product.stock += qty;
+        localStorage.setItem('products', JSON.stringify(products));
+
+        stockLogs.push({
+          id: Date.now(),
+          productId: productId,
+          productName: product.name,
+          type: 'in',
+          qty: qty,
+          remark: remark,
+          createdAt: new Date().toLocaleString('zh-CN')
+        });
+        localStorage.setItem('stockLogs', JSON.stringify(stockLogs));
+
+        closeModal('stockInModal');
+        renderInventoryPage();
+        showToast(`入库成功，${product.name} +${qty}`, 'success');
+      }
+    }
+
+    function quickStockIn(productId) {
+      const product = products.find(p => p.id === productId);
+      if (product) {
+        document.getElementById('stockInProduct').innerHTML = `<option value="${product.id}">${product.name} (当前库存: ${product.stock})</option>`;
+        document.getElementById('stockInProduct').value = product.id;
+        document.getElementById('stockInModal').classList.add('active');
+      }
+    }
+
+    function adjustStock(productId) {
+      showToast('调整功能开发中', 'success');
+    }
+
+    function exportInventory() {
+      const csvContent = 'data:text/csv;charset=utf-8,' + 
+        '商品,库存,安全库存,库存状态\n' +
+        products.map(p => `${p.name},${p.stock},${p.safeStock || 20},${p.stock < (p.safeStock || 20) ? '不足' : '正常'}`).join('\n');
+      
+      const link = document.createElement('a');
+      link.setAttribute('href', encodeURI(csvContent));
+      link.setAttribute('download', 'inventory.csv');
+      link.click();
+      showToast('库存已导出', 'success');
+    }
+
+    // ===== 营销活动 =====
+    function renderMarketingPage() {
+      // 统计数据
+      const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
+      const totalCoupons = coupons.reduce((sum, c) => sum + c.total, 0);
+      const usedCoupons = coupons.reduce((sum, c) => sum + c.used, 0);
+      const campaignRevenue = campaigns.reduce((sum, c) => sum + (c.revenue || 0), 0);
+
+      document.getElementById('activeCampaigns').textContent = activeCampaigns;
+      document.getElementById('totalCoupons').textContent = totalCoupons;
+      document.getElementById('usedCoupons').textContent = usedCoupons;
+      document.getElementById('campaignRevenue').textContent = '¥' + campaignRevenue.toLocaleString();
+
+      // 活动列表
+      renderCampaignsList();
+
+      // 优惠券列表
+      document.getElementById('couponsTable').innerHTML = coupons.map(coupon => `
+        <tr>
+          <td style="font-weight: 500;">${coupon.name}</td>
+          <td>${coupon.type === 'fixed' ? '满减券' : '折扣券'}</td>
+          <td>${coupon.used} / ${coupon.total}</td>
+          <td>${coupon.days}天</td>
+          <td><span class="status-badge status-${coupon.status === 'active' ? 'delivered' : 'cancelled'}">${coupon.status === 'active' ? '有效' : '已停用'}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="action-btn" onclick="toggleCoupon(${coupon.id})">${coupon.status === 'active' ? '停用' : '启用'}</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCampaignsList() {
+      const filter = document.getElementById('campaignFilter')?.value || '';
+      let filteredCampaigns = campaigns;
+
+      if (filter) {
+        filteredCampaigns = campaigns.filter(c => c.status === filter);
+      }
+
+      const typeMap = { discount: '满减活动', coupon: '优惠券活动', gift: '赠品活动', flash: '限时秒杀' };
+      const statusMap = { active: '进行中', pending: '未开始', ended: '已结束' };
+
+      document.getElementById('campaignsList').innerHTML = filteredCampaigns.map(campaign => `
+        <div class="user-card" style="flex-direction: column; align-items: stretch;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div>
+              <h4 style="font-size: 1.1rem; margin-bottom: 0.3rem;">${campaign.name}</h4>
+              <p style="font-size: 0.85rem; color: #666;">${typeMap[campaign.type]} | ${campaign.desc}</p>
+            </div>
+            <span class="status-badge status-${campaign.status === 'active' ? 'delivered' : campaign.status === 'pending' ? 'pending' : 'cancelled'}">${statusMap[campaign.status]}</span>
+          </div>
+          <div style="display: flex; gap: 2rem; font-size: 0.9rem; color: #666;">
+            <div>⏰ ${campaign.startAt.replace('T', ' ')} ~ ${campaign.endAt.replace('T', ' ')}</div>
+            ${campaign.threshold > 0 ? `<div>💰 满${campaign.threshold}减${campaign.discount}</div>` : ''}
+            <div>📊 收入: ¥${(campaign.revenue || 0).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterCampaigns() {
+      renderCampaignsList();
+    }
+
+    function showAddCampaignModal() {
+      document.getElementById('campaignModal').classList.add('active');
+    }
+
+    function submitCampaign() {
+      const name = document.getElementById('campaignName').value;
+      const startAt = document.getElementById('campaignStart').value;
+      const endAt = document.getElementById('campaignEnd').value;
+      const type = document.getElementById('campaignType').value;
+      const threshold = parseInt(document.getElementById('campaignThreshold').value) || 0;
+      const discount = parseInt(document.getElementById('campaignDiscount').value) || 0;
+      const desc = document.getElementById('campaignDesc').value;
+
+      if (!name || !startAt || !endAt) {
+        showToast('请填写完整信息', 'error');
+        return;
+      }
+
+      const now = new Date();
+      const start = new Date(startAt);
+      const end = new Date(endAt);
+
+      let status = 'pending';
+      if (now >= start && now <= end) status = 'active';
+      if (now > end) status = 'ended';
+
+      campaigns.push({
+        id: Date.now(),
+        name, type, threshold, discount, startAt, endAt, desc, status,
+        revenue: 0
+      });
+      localStorage.setItem('campaigns', JSON.stringify(campaigns));
+
+      closeModal('campaignModal');
+      renderMarketingPage();
+      showToast('活动创建成功', 'success');
+    }
+
+    function showAddCouponModal() {
+      document.getElementById('couponModal').classList.add('active');
+    }
+
+    function submitCoupon() {
+      const name = document.getElementById('couponName').value;
+      const type = document.getElementById('couponType').value;
+      const value = parseInt(document.getElementById('couponValue').value);
+      const minSpend = parseInt(document.getElementById('couponMinSpend').value) || 0;
+      const total = parseInt(document.getElementById('couponTotal').value);
+      const days = parseInt(document.getElementById('couponDays').value);
+
+      if (!name || !value || !total) {
+        showToast('请填写完整信息', 'error');
+        return;
+      }
+
+      coupons.push({
+        id: Date.now(),
+        name, type, value, minSpend, total, days,
+        used: 0,
+        status: 'active'
+      });
+      localStorage.setItem('coupons', JSON.stringify(coupons));
+
+      closeModal('couponModal');
+      renderMarketingPage();
+      showToast('优惠券创建成功', 'success');
+    }
+
+    function toggleCoupon(id) {
+      const coupon = coupons.find(c => c.id === id);
+      if (coupon) {
+        coupon.status = coupon.status === 'active' ? 'inactive' : 'active';
+        localStorage.setItem('coupons', JSON.stringify(coupons));
+        renderMarketingPage();
+        showToast(`优惠券已${coupon.status === 'active' ? '启用' : '停用'}`, 'success');
+      }
+    }
+
+    // ===== 工具函数 =====
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastIcon = document.getElementById('toastIcon');
+      const toastMessage = document.getElementById('toastMessage');
+
+      toast.className = 'toast ' + type;
+      toastIcon.textContent = type === 'success' ? '✓' : '✕';
+      toastMessage.textContent = message;
+
+      toast.classList.add('active');
+      setTimeout(() => toast.classList.remove('active'), 3000);
+    }
+
+    function showAddProductModal() {
+      showToast('添加商品功能开发中', 'success');
+    }
+
+    function showAddUserModal() {
+      showToast('添加用户功能开发中', 'success');
+    }
+
+    // ===== 初始化 =====
+    if (localStorage.getItem('adminLoggedIn') === 'true') {
+      showAdminLayout();
+    }
+  </script>
+</body>
+</html>
